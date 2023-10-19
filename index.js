@@ -23,7 +23,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    // await client.connect();
+    await client.connect();
 
     const brandsCollection = client.db("brandShop").collection("brands");
     const carCollection = client.db("brandShop").collection("cars");
@@ -99,6 +99,7 @@ async function run() {
     //cart apis
     app.get("/carts", async (req, res) => {
       const email = req.query.email;
+      // console.log(email);
       const result = await cartCollection.find({ userEmail: email }).toArray();
       res.send(result);
     });
@@ -107,6 +108,7 @@ async function run() {
       const data = req.body;
       const existingProduct = await cartCollection.findOne({
         productId: data.productId,
+        userEmail: data.userEmail,
       });
 
       if (existingProduct) {
@@ -119,7 +121,6 @@ async function run() {
       } else {
         const insertResult = await cartCollection.insertOne(data);
         res.send(insertResult);
-        c;
       }
     });
 
@@ -130,7 +131,7 @@ async function run() {
     });
 
     // Send a ping to confirm a successful connection
-    // await client.db("admin").command({ ping: 1 });
+    await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
