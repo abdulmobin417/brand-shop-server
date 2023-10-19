@@ -31,7 +31,103 @@ async function run() {
     const cartCollection = client.db("brandShop").collection("carts");
 
     // filter cars by brand name
-    
+    app.get("/car/:brand", async (req, res) => {
+      const brand = req.params.brand;
+      const query = { brand: brand };
+      const result = await carCollection.find(query).toArray();
+      // console.log(brand);
+      res.send(result);
+    });
+
+    //brand apis
+    app.get("/brands", async (req, res) => {
+      const result = await brandsCollection.find({}).toArray();
+      res.send(result);
+    });
+
+    app.get("/brandDetails/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await brandsCollection.findOne(query);
+      res.send(result);
+    });
+
+    app.get("/carDetails/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await carCollection.findOne(query);
+      res.send(result);
+    });
+
+    app.post("/car", async (req, res) => {
+      const newCar = req.body;
+      console.log(newCar);
+      const result = await carCollection.insertOne(newCar);
+      res.send(result);
+    });
+
+    app.put("/car/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updatedCar = req.body;
+
+      const car = {
+        $set: {
+          name: updatedCar.name,
+          brand: updatedCar.brand,
+          category: updatedCar.category,
+          description: updatedCar.description,
+          price: updatedCar.price,
+          ratings: updatedCar.ratings,
+          photo: updatedCar.photo,
+        },
+      };
+
+      const result = await carCollection.updateOne(filter, car, options);
+      res.send(result);
+    });
+
+    //user apis
+    app.post("/users", async (req, res) => {
+      const data = req.body;
+      const result = await usersCollection.insertOne(data);
+      console.log(data);
+      res.send(result);
+    });
+
+    //cart apis
+    app.get("/carts", async (req, res) => {
+      const email = req.query.email;
+      const result = await cartCollection.find({ userEmail: email }).toArray();
+      res.send(result);
+    });
+
+    app.post("/carts", async (req, res) => {
+      const data = req.body;
+      const existingProduct = await cartCollection.findOne({
+        productId: data.productId,
+      });
+
+      if (existingProduct) {
+        existingProduct.quantity = existingProduct.quantity + 1;
+        await cartCollection.updateOne(
+          { _id: new ObjectId(existingProduct._id) },
+          { $set: { quantity: existingProduct.quantity } }
+        );
+        res.send(existingProduct);
+      } else {
+        const insertResult = await cartCollection.insertOne(data);
+        res.send(insertResult);
+        c;
+      }
+    });
+
+    app.delete("/carts/:id", async (req, res) => {
+      const id = req.params.id;
+      const result = await cartCollection.deleteOne({ _id: new ObjectId(id) });
+      res.send(result);
+    });
 
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
